@@ -1,0 +1,78 @@
+.Overlay {
+   position: absolute;
+   top: 50%;
+   width: 100%;
+   pointer-events: all;
+   background-color: var(--ovelay-color);
+   color: var(--primary-color);
+   padding: 12px 16px;
+   border: 1px solid var(--ovelay-border);
+   border-radius: 8px;
+   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+   transform: translateY(-100%);
+   z-index: 100;
+   cursor: default;
+}
+
+.Header {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 12px;
+   color: #52515B;
+}
+
+.Item {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   border: 1px dotted #5e5d6757;
+   padding-bottom: 8px;
+   margin-right: 8px;
+}
+
+.Box {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   max-height: 86px;
+   overflow: auto;
+
+   &::-webkit-scrollbar {
+      width: 4px;
+      border-radius: 999px;
+   }
+
+   &::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 999px;
+   }
+
+   &::-webkit-scrollbar-thumb {
+      background: #E1DFE7;
+      border-radius: 999px;
+   }
+}
+
+.TextLabel {
+   line-height: 1.6;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   font-size: 12px;
+   font-weight: 400;
+
+   span {
+      width: 10px;
+      height: 10px;
+      display: block;
+      border-radius: 50%;
+   }
+}
+
+.TextValue {
+   font-size: 12px;
+   line-height: 1.6;
+   color: #52515B;
+   font-weight: 800;
+}

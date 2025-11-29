@@ -1,0 +1,26 @@
+@use './reset.scss';
+
+:root {
+   --1-shadow: rgba(48, 48, 57, 0.2);
+   --2-shadow: rgba(56, 56, 231, 0.2);
+   --3-shadow: rgba(255, 102, 26, 0.2);
+   --4-shadow: rgba(53, 189, 173, 0.2);
+
+   --1-stroke: rgb(48, 48, 57);
+   --2-stroke: rgb(56, 56, 231);
+   --3-stroke: rgb(255, 102, 26);
+   --4-stroke: rgb(53, 189, 173);
+
+   --ovelay-color: white;
+   --ovelay-border: #808080;
+   --primary-color: #303039;
+   --primary-hover-color: #30303946;
+}
+
+.container {
+   max-width: 1270px;
+   margin-right: auto;
+   margin-left: auto;
+   padding-left: 15px;
+   padding-right: 15px;
+}
