@@ -63,6 +63,7 @@
 
 .VariationsButton {
    padding: 10px;
+   text-transform: capitalize;
 
    &:hover {
       background-color: var(--primary-hover-color);

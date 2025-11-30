@@ -30,7 +30,11 @@ const datasets = variationNames.map((variationName, index) => {
       tension: 0.4,
       fill: true,
       pointRadius: 0,
-      pointHoverRadius: 6,
+      pointHoverRadius: 0,
+      pointHitRadius: 10,
+      pointHoverBorderWidth: 0,
+      pointBackgroundColor: 'transparent',
+      pointHoverBackgroundColor: 'transparent',
    };
 });
 
