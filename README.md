@@ -1,6 +1,6 @@
 # React + TypeScript + Vite
 
-3. Clear README including:
+Clear README including:
    - Chosen visualization library
    - Implemented and bonus features
    - Local setup instructions
