@@ -1,32 +1,9 @@
-interface VisitsData {
-   [key: string]: number | undefined;
-}
+export type Variation = string | 'All variations selected';
+export type DateRange = 'Days' | 'Weeks';
+export type ChartStyle = 'curve' | 'area' | 'straight line';
 
-interface ConversionsData {
-   [key: string]: number | undefined;
+export interface SelectedButtons {
+   dates: DateRange;
+   variations: Variation;
+   style: ChartStyle;
 }
-
-export interface OriginalDataItem {
-   date: string;
-   visits: VisitsData;
-   conversions: ConversionsData;
-}
-
-export interface TransformedDataItem {
-   date: string;
-   [variation: string]: string | number;
-}
-
-// types.ts
-export interface OriginalDataItem {
-   date: string;
-   visits: { [key: string]: number | undefined };
-   conversions: { [key: string]: number | undefined };
-}
-
-export interface WeekDataItem {
-   week: string;
-   [variation: string]: number | string;
-}
-
-export type Period = 'day' | 'week';

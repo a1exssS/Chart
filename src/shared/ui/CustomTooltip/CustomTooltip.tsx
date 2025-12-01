@@ -1,4 +1,3 @@
-import type { TooltipItem } from "chart.js";
 import styles from './Tooltip.module.scss'
 import { useCallback } from "react";
 import Cup from 'shared/assets/icons/Cup.svg'

@@ -11,10 +11,7 @@
    --3-stroke: rgb(255, 102, 26);
    --4-stroke: rgb(53, 189, 173);
 
-   --ovelay-color: white;
-   --ovelay-border: #808080;
-   --primary-color: #303039;
-   --primary-hover-color: #30303946;
+
 }
 
 .container {
@@ -23,4 +20,24 @@
    margin-left: auto;
    padding-left: 15px;
    padding-right: 15px;
+}
+
+body.dark {
+   background-color: #151522;
+   color: #ffffff;
+
+   --ovelay-color: #303039;
+   --ovelay-border: #808080;
+   --primary-color: white;
+   --primary-hover-color: #59596746;
+}
+
+body.light {
+   background-color: #ffffff;
+   color: var(--primary-color);
+
+   --ovelay-color: white;
+   --ovelay-border: #808080;
+   --primary-color: #303039;
+   --primary-hover-color: #30303946;
 }

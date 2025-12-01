@@ -3,7 +3,7 @@
    max-width: 1200px;
    margin: 0 auto;
    padding: 20px;
-   background-color: white;
+   background-color: inherit;
    border-radius: 12px;
    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
    display: flex;
@@ -30,6 +30,20 @@
 .ChartControlPanel {
    display: flex;
    align-items: center;
+   justify-content: space-between;
+}
+
+.ChartControlPanelItem {
+   display: flex;
+   align-items: center;
+
+   &:first-child {
+      gap: 8px;
+   }
+
+   &:last-child {
+      gap: 20px;
+   }
 }
 
 .ChartControlsBox {
@@ -47,6 +61,7 @@
 }
 
 .ChartControlsButton {
+   color: inherit;
    padding: 6px 8px;
    border-radius: 4px;
    border: 1px solid var(--ovelay-border);
@@ -64,8 +79,44 @@
 .VariationsButton {
    padding: 10px;
    text-transform: capitalize;
+   color: inherit;
 
    &:hover {
       background-color: var(--primary-hover-color);
    }
+}
+
+.zoomButtons {
+   display: flex;
+   align-items: center;
+
+   button {
+      width: 27px;
+      height: 27px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+
+      &:not(:last-child) {
+         border: 1px solid var(--ovelay-border);
+      }
+
+      &:first-child {
+         border-top-left-radius: 4px;
+         border-bottom-left-radius: 4px;
+         border-right: 0;
+      }
+
+      &:nth-child(2) {
+         border-top-right-radius: 4px;
+         border-bottom-right-radius: 4px;
+      }
+   }
+}
+
+.BottomControls {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
 }

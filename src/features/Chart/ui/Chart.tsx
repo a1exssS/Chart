@@ -1,8 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styles from './Chart.module.scss';
 import {
    Chart as ChartJS,
-   LineController,
    CategoryScale,
    LinearScale,
    PointElement,
@@ -12,15 +10,21 @@ import {
    Filler,
    type ChartOptions,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { chartData, type chartDataType } from '../model/lib/chartData';
+import annotationPlugin from 'chartjs-plugin-annotation';
+import { verticalCrosshairPlugin } from 'shared/lib/crosshairPlugin/crosshairPlugin';
+import { chartData } from '../model/lib/chartData';
 import { CustomTooltip } from 'shared/ui/CustomTooltip/CustomTooltip';
 import type { CustomTooltipData } from 'shared/types/tooltip/tooltip';
 import { classNames } from 'shared/lib/classNames/classNames';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import annotationPlugin from 'chartjs-plugin-annotation';
-import { verticalCrosshairPlugin } from 'shared/lib/crosshairPlugin/crosshairPlugin';
+import { ThemeSwitcher } from 'shared/ui/ThemeSwitcher/ThemeSwitcher';
+import styles from './Chart.module.scss';
+import { Line } from 'react-chartjs-2';
+import { useChartControls } from '../model/lib/useChartControls';
+import PlusIcon from 'shared/assets/icons/plus.svg'
+import MinusIcon from 'shared/assets/icons/minus.svg'
+import ResetIcon from 'shared/assets/icons/reset.svg'
 
 ChartJS.register(
    CategoryScale,
@@ -35,22 +39,9 @@ ChartJS.register(
    verticalCrosshairPlugin
 );
 
-interface SelectedButtons {
-   dates: 'Days' | 'Weeks';
-   variations: string;
-   style: 'curve' | 'straight line' | 'shadow' | 'area';
-}
-
 const Chart = memo(() => {
    const chartRef = useRef<ChartJS<'line'>>(null);
    const [isShiftPressed, setIsShiftPressed] = useState(false);
-   const [data, setData] = useState<chartDataType>(chartData);
-   const [selectedButtons, setSelectedButtons] = useState<SelectedButtons>({
-      dates: 'Days',
-      variations: 'All variations selected',
-      style: 'area'
-   });
-
    const [tooltipData, setTooltipData] = useState<CustomTooltipData>({
       isVisible: false,
       dataPoints: [],
@@ -58,18 +49,17 @@ const Chart = memo(() => {
       opacity: 0,
    });
 
+   const { selected, data, update } = useChartControls(chartData);
+
+   // Shift для панорамирования
    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-         if (e.key === 'Shift') setIsShiftPressed(true);
-      };
-      const handleKeyUp = (e: KeyboardEvent) => {
-         if (e.key === 'Shift') setIsShiftPressed(false);
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
+      const down = (e: KeyboardEvent) => e.key === 'Shift' && setIsShiftPressed(true);
+      const up = (e: KeyboardEvent) => e.key === 'Shift' && setIsShiftPressed(false);
+      window.addEventListener('keydown', down);
+      window.addEventListener('keyup', up);
       return () => {
-         window.removeEventListener('keydown', handleKeyDown);
-         window.removeEventListener('keyup', handleKeyUp);
+         window.removeEventListener('keydown', down);
+         window.removeEventListener('keyup', up);
       };
    }, []);
 
@@ -85,35 +75,13 @@ const Chart = memo(() => {
       setTooltipData({
          isVisible: true,
          dataPoints: tooltip.dataPoints,
-         opacity: tooltip.opacity,
+         opacity: 1,
          position: {
             x: tooltip.caretX,
-            chartWidth: chartRef.current.width ?? 0,
+            chartWidth: chartRef.current.width,
          },
       });
    }, []);
-
-   const groupByWeeks = (source: chartDataType): chartDataType => {
-      const weeks: string[] = [];
-      const newDatasets = source.datasets.map(ds => ({
-         ...ds,
-         data: [] as number[],
-      }));
-
-      for (let i = 0; i < source.labels.length; i++) {
-         const day = parseInt(source.labels[i]);
-         if (day % 7 === 0 || i === 0) {
-            weeks.push(source.labels[i]);
-            newDatasets.forEach((ds, idx) => ds.data.push(source.datasets[idx].data[i]));
-         }
-      }
-
-      return { labels: weeks, datasets: newDatasets };
-   };
-
-   const getZoomLimits = () => ({
-      x: { min: 0, max: data.labels.length - 1, minRange: 5 },
-   });
 
    const chartOptions = useMemo<ChartOptions<'line'>>(() => ({
       responsive: true,
@@ -140,7 +108,7 @@ const Chart = memo(() => {
                pinch: { enabled: true },
                mode: 'x',
             },
-            limits: getZoomLimits(),
+            limits: { x: { min: 0, max: data.labels.length - 1, minRange: 5 } },
          },
       },
       elements: {
@@ -163,7 +131,7 @@ const Chart = memo(() => {
             ticks: { callback: (value: any) => value + '%' },
             grid: {
                display: false,
-               dash: [5, 5], // 5px line, 5px gap
+               dash: [5, 5],
                dashOffset: 0,
                color: 'rgba(0, 0, 0, 0.2)'
 
@@ -178,196 +146,131 @@ const Chart = memo(() => {
             }
          }
       },
-   }), [externalTooltipHandler]);
+   }), [externalTooltipHandler, data.datasets.length]);
 
-   const resetZoom = () => chartRef.current?.resetZoom();
-   const zoomIn = () => chartRef.current?.zoom(1.2);
-   const zoomOut = () => chartRef.current?.zoom(0.8);
+   const resetZoom = useCallback(() => chartRef.current?.resetZoom(), []);
+   const zoomIn = useCallback(() => chartRef.current?.zoom(1.2), []);
+   const zoomOut = useCallback(() => chartRef.current?.zoom(0.8), []);
 
-   const showAllVariations = () => {
-      setSelectedButtons(prev => ({ ...prev, variations: 'All variations selected' }));
-      const newData = selectedButtons.dates === 'Days' ? chartData : groupByWeeks(chartData);
-      setData(newData);
+   const downloadPNGClean = () => {
+      if (!chartRef.current) return;
+      ChartJS.registry.plugins.unregister(verticalCrosshairPlugin);
+      chartRef.current.update('none');
+      requestAnimationFrame(() => {
+
+         const url = chartRef.current!.toBase64Image('image/png', 1);
+
+         const a = document.createElement('a');
+         a.href = url;
+         a.download = `chart-${new Date().toISOString().slice(0, 10)}.png`;
+         a.click();
+
+         ChartJS.register(verticalCrosshairPlugin);
+
+         chartRef.current!.update('none');
+      });
    };
-
-   const showSelectedVariation = (variation: string) => {
-      setSelectedButtons(prev => ({ ...prev, variations: variation }));
-      const filtered = chartData.datasets.filter(d => d.label === variation);
-      const source = { ...chartData, datasets: filtered };
-      const newData = selectedButtons.dates === 'Days' ? source : groupByWeeks(source);
-      setData(newData);
-   };
-
-   const switchToDays = () => {
-      setSelectedButtons(prev => ({ ...prev, dates: 'Days' }));
-      const filtered = selectedButtons.variations === 'All variations selected'
-         ? chartData.datasets
-         : chartData.datasets.filter(d => d.label === selectedButtons.variations);
-      setData({ ...chartData, datasets: filtered });
-   };
-
-   const switchToWeeks = () => {
-      setSelectedButtons(prev => ({ ...prev, dates: 'Weeks' }));
-      const filtered = selectedButtons.variations === 'All variations selected'
-         ? chartData.datasets
-         : chartData.datasets.filter(d => d.label === selectedButtons.variations);
-      setData(groupByWeeks({ ...chartData, datasets: filtered }));
-   };
-
-   const switchStyle = ({ style }: Pick<SelectedButtons, 'style'>) => {
-      switch (style) {
-         case 'curve':
-            setData(({ labels, datasets }) => {
-               return {
-                  labels,
-                  datasets: datasets.map((item) => {
-                     return { ...item, fill: false, tension: 0.4 }
-                  })
-               }
-            })
-            break;
-         case 'area': {
-            setData(({ labels, datasets }) => {
-               return {
-                  labels,
-                  datasets: datasets.map((item) => {
-                     return { ...item, fill: true, tension: 0.4 }
-                  })
-               }
-            })
-         }
-            break;
-         case 'straight line': {
-            setData(({ labels, datasets }) => {
-               return {
-                  labels,
-                  datasets: datasets.map((item) => {
-                     return { ...item, tension: 0, fill: false }
-                  })
-               }
-            })
-         }
-            break;
-         case 'shadow': {
-            setData(({ labels, datasets }) => {
-               return {
-                  labels,
-                  datasets: datasets.map((item) => {
-                     return {
-                        ...item,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        borderColor: '#3b82f6',
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowBlur: 12,
-                        shadowColor: '#3b82f680',
-                     }
-                  })
-               }
-            })
-         }
-            break;
-
-         default:
-            break;
-      }
-
-   }
 
    return (
       <div className={styles.Chart}>
          <div className={styles.ChartControlPanel}>
-            <div className={styles.ChartControlsBox}>
-               <div className={styles.ChartControlsItem}>
-                  <Menu>
-                     <MenuButton className={styles.ChartControlsButton}>
-                        {selectedButtons.variations}
-                     </MenuButton>
-                     <MenuItems anchor="bottom" className={styles.VariationsBox}>
-                        <MenuItem>
-                           <button onClick={showAllVariations} className={styles.VariationsButton}>
-                              All variations selected
+            <div className={styles.ChartControlPanelItem}>
+               <Menu>
+                  <MenuButton className={styles.ChartControlsButton}>
+                     {selected.variations}
+                  </MenuButton>
+                  <MenuItems anchor="bottom" className={styles.VariationsBox}>
+                     <MenuItem>
+                        <button
+                           className={styles.VariationsButton}
+                           onClick={() => update({ variations: 'All variations selected' })}
+                        >
+                           All variations
+                        </button>
+                     </MenuItem>
+                     {chartData.datasets.map(ds => (
+                        <MenuItem key={ds.label}>
+                           <button
+                              className={styles.VariationsButton}
+                              onClick={() => update({ variations: ds.label })}
+                           >
+                              {ds.label}
                            </button>
                         </MenuItem>
-                        {chartData.datasets.map(item => (
-                           <MenuItem key={item.label}>
-                              <button
-                                 onClick={() => showSelectedVariation(item.label)}
-                                 className={styles.VariationsButton}
-                              >
-                                 {item.label}
-                              </button>
-                           </MenuItem>
-                        ))}
-                     </MenuItems>
-                  </Menu>
-                  <Menu>
-                     <MenuButton className={styles.ChartControlsButton}>
-                        {selectedButtons.dates === 'Days' ? 'Day' : 'Week'}
-                     </MenuButton>
-                     <MenuItems anchor="bottom" className={styles.VariationsBox}>
-                        <MenuItem>
-                           <button onClick={switchToDays} className={styles.VariationsButton}>Day</button>
-                        </MenuItem>
-                        <MenuItem>
-                           <button onClick={switchToWeeks} className={styles.VariationsButton}>Week</button>
-                        </MenuItem>
-                     </MenuItems>
-                  </Menu>
+                     ))}
+                  </MenuItems>
+               </Menu>
+               <Menu>
+                  <MenuButton className={styles.ChartControlsButton}>
+                     {selected.dates === 'Days' ? 'Day' : 'Week'}
+                  </MenuButton>
+                  <MenuItems anchor="bottom" className={styles.VariationsBox}>
+                     <MenuItem>
+                        <button
+                           className={styles.VariationsButton}
+                           onClick={() => update({ dates: 'Days' })}
+                        >
+                           Day
 
+                        </button>
+                     </MenuItem>
+                     <MenuItem>
+                        <button
+                           className={styles.VariationsButton}
+                           onClick={() => update({ dates: 'Weeks' })}
+                        >
+                           Week
+
+                        </button>
+                     </MenuItem>
+                  </MenuItems>
+               </Menu>
+            </div>
+
+            <div className={styles.ChartControlPanelItem}>
+               <Menu>
+                  <MenuButton className={styles.ChartControlsButton}>
+                     Line style: {selected.style}
+                  </MenuButton>
+                  <MenuItems anchor="bottom" className={styles.VariationsBox}>
+                     {(['curve', 'area', 'straight line'] as const).map(s => (
+                        <MenuItem key={s}>
+                           <button
+                              className={styles.VariationsButton}
+                              onClick={() => update({ style: s })}
+                           >
+                              {s}
+                           </button>
+                        </MenuItem>
+                     ))}
+                  </MenuItems>
+               </Menu>
+
+               <div className={styles.zoomButtons}>
+                  <button onClick={zoomIn}>
+                     <PlusIcon />
+                  </button>
+                  <button onClick={zoomOut}>
+                     <MinusIcon />
+                  </button>
+                  <button onClick={resetZoom}>
+                     <ResetIcon />
+                  </button>
                </div>
 
-               <div className={styles.ChartControlsItem}>
-                  <Menu>
-                     <MenuButton className={styles.ChartControlsButton}>
-                        Line style: {selectedButtons.style}
-                     </MenuButton>
-                     <MenuItems anchor="bottom" className={styles.VariationsBox}>
-                        <MenuItem>
-                           <button
-                              onClick={() => switchStyle({ style: 'curve' })}
-                              className={styles.VariationsButton}
-                           >
-                              curve
-                           </button>
-                        </MenuItem>
-                        <MenuItem>
-                           <button
-                              onClick={() => switchStyle({ style: 'straight line' })}
-                              className={styles.VariationsButton}
-                           >
-                              straight line
-                           </button>
-                        </MenuItem>
-                        <MenuItem>
-                           <button
-                              onClick={() => switchStyle({ style: 'shadow' })}
-                              className={styles.VariationsButton}
-                           >
-                              shadow
-                           </button>
-                        </MenuItem>
-                        <MenuItem>
-                           <button
-                              onClick={() => switchStyle({ style: 'area' })}
-                              className={styles.VariationsButton}
-                           >
-                              area
-                           </button>
-                        </MenuItem>
-                     </MenuItems>
-                  </Menu>
-                  <button onClick={resetZoom} className={styles.ChartControlsButton}>Reset Zoom</button>
-                  <button onClick={zoomIn} className={styles.ChartControlsButton}>+</button>
-                  <button onClick={zoomOut} className={styles.ChartControlsButton}>-</button>
-               </div>
             </div>
          </div>
 
          <div className={classNames(styles.ChartBox, { [styles.moveCursor]: isShiftPressed })}>
             <Line ref={chartRef} data={data} options={chartOptions} />
             <CustomTooltip {...tooltipData} />
+         </div>
+
+         <div className={styles.BottomControls}>
+            <button onClick={downloadPNGClean} className={styles.ChartControlsButton}>
+               Download PNG
+            </button>
+            <ThemeSwitcher />
          </div>
       </div>
    );
