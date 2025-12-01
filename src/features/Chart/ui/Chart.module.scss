@@ -80,6 +80,8 @@
    padding: 10px;
    text-transform: capitalize;
    color: inherit;
+   display: flex;
+   align-items: center;
 
    &:hover {
       background-color: var(--primary-hover-color);

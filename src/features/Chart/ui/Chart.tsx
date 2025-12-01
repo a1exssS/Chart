@@ -25,6 +25,8 @@ import { useChartControls } from '../model/lib/useChartControls';
 import PlusIcon from 'shared/assets/icons/plus.svg'
 import MinusIcon from 'shared/assets/icons/minus.svg'
 import ResetIcon from 'shared/assets/icons/reset.svg'
+import DropdownIcon from 'shared/assets/icons/dropdown.svg'
+
 
 ChartJS.register(
    CategoryScale,
@@ -178,6 +180,8 @@ const Chart = memo(() => {
                <Menu>
                   <MenuButton className={styles.ChartControlsButton}>
                      {selected.variations}
+                     <DropdownIcon />
+
                   </MenuButton>
                   <MenuItems anchor="bottom" className={styles.VariationsBox}>
                      <MenuItem>
@@ -203,6 +207,8 @@ const Chart = memo(() => {
                <Menu>
                   <MenuButton className={styles.ChartControlsButton}>
                      {selected.dates === 'Days' ? 'Day' : 'Week'}
+                     <DropdownIcon />
+
                   </MenuButton>
                   <MenuItems anchor="bottom" className={styles.VariationsBox}>
                      <MenuItem>
@@ -231,6 +237,8 @@ const Chart = memo(() => {
                <Menu>
                   <MenuButton className={styles.ChartControlsButton}>
                      Line style: {selected.style}
+                     <DropdownIcon />
+
                   </MenuButton>
                   <MenuItems anchor="bottom" className={styles.VariationsBox}>
                      {(['curve', 'area', 'straight line'] as const).map(s => (

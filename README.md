@@ -13,3 +13,7 @@ Clear README including:
 
 1. Clone the ripository to your work plase by simply using the command or downloading zip
 2. Then use command field and run "npm i" to install all packeges, and then use "npm run dev" to run the project
+
+My final words:
+
+This is my first time making this chart, so I tried a lot of other libraries before settling on this one which certainly took me a while. Also there is not much info in the instructions on what u need and also the Figma based programm didn't work good for me, this is the main reason of me using my icons, and also there were a lot of confution in this template so I've tried to do my best to make the template based on my view.
